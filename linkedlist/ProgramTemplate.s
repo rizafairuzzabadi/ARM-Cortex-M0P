@@ -350,8 +350,37 @@ Insert			FUNCTION
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
 				MOVS	R0,#1
-				
-				BX LR
+				LDR		R1, =FIRST_ELEMENT 	;Load address pointer of first element
+				LDR 	R1, [R1]			;R1 having base address of head
+				CMP		R1, #0				;Check if head is NULL
+				BNE		NoErrorThree		;Skips to NoErrorOne if not equal
+				MOVS	R0, #3				;R0 = 3 (indicating The Linked List is empty Error)
+				BEQ		Return				;Direct return with new R0 Error Arg.
+NoErrorThree	LDR		R2, [R0,#0]			;R2 = argument->data
+				LDR		R3, [R1,#0]			;R3 = head->data
+				LDR 	R4, R1				;R4 as temp = head
+				CMP		R2, R3				;Check if head equals the argument data
+				BNE		Check				;Branch to Skip if Equal
+				LDR		R3, [R3,#4]			;R3 = head->next
+				STR		R3, [R1] 			;Change first_element to next
+				BL		Free				;Call Free function with R0 value parameter
+				B		Return				;Branch to Return to skip next instructions
+Check			MOVS	R5, R4				;R5 as prev = temp
+				LDR		R4, [R4,#4]			;temp = temp->next
+				CMP		R4, #0				;Check if temp is NULL
+				BNE		NoErrorFour			;Continues the function if not equal
+				MOVS	R0, #4				;R0 = 4 (indicating the element isn't found Error)
+				BEQ		Return				;Direct return with new R0 Error Arg.
+NoErrorFour		LDR		R3, [R4,#0]			;R3 = temp->data
+				CMP 	R2, R3				;Compare temp->data and arg->data
+				BNE		Check				;Go back to check if equal
+				LDR		R5, [R5,#4]			;R5 = R5->next	(prev)
+				MOVS 	R0, R5				;R0 = temp
+				LDR		R4, [R4,#4]			;R4 = R4->next	(temp)
+				MOVS	R4, R5				;prev->next = temp->next // R5 = R4
+				BL		Free				;Call Free function with R0 value parameter
+				MOVS	R0, #0				;After freeing, R0 = 0 to indicate no error's been found
+Return			BX LR						;Return R0
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
